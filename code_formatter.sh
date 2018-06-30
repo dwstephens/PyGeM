@@ -2,7 +2,7 @@
 
 #######################################
 
-required_command="yapf unexpand"
+required_command="yapf"
 code_directories="pygem tests"
 
 #######################################
@@ -34,35 +34,19 @@ done
 # Find all python files in code directories
 python_files=""
 for dir in $code_directories; do
-	python_files="$python_files `ls $dir/*.py`"
+    python_files="$python_files $(find $dir -name '*.py')"
 done
 [[ $# != 0 ]] && python_files=$@
 
-# The files unvhandler.py and params.py can not be formatted because there are
-# strings with spaces inside that otherwise would be converted in tabs.
-python_files_true=""
-for file in $python_files; do
-	if [ $file != "pygem/unvhandler.py" ] && [ $file != "pygem/params.py" ]; then
-		python_files_true="$python_files_true $file"
-	fi
-done
 
-# Here the important part:
-# - first, yapf format the files; it works very well just setting few option
-#		by command line, but at the moment it has bugs for tabs, so uses spaces.
-# - second, convert 4 spaces to tab character
-# - third, you can look a very pretty code 
-for file in $python_files_true; do
-	echo "Making beatiful $file..."
+# Here the important part: yapf format the files.
+for file in $python_files; do
+	echo "Making beautiful $file..."
 	[[ ! -f $file ]] && echo "$file does not exist; $0 -h for more info" && exit
 	
 	yapf --style='{
 					based_on_style: pep8, 
 				   	indent_width: 4,
-					dedent_closing_brackets = true,
-					coalesce_brackets = true,
-					column_limit = 80
+					column_limit: 80
 			  	  }' -i $file
-	unexpand -t 4 $file > tmp.py
-	mv tmp.py $file
 done
